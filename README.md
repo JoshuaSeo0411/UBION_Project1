@@ -29,24 +29,21 @@ UBION Project1 / 2023.02.27 ~ 2023.03.26
 
 ## **1. Preprocessing**
 #### 결측치
-- 결측치가 없음
 - 파생변수 제작시 발생한 결측치 제거
 
 #### 이상치
-- 거래소코드가 2개인 기업 중복 제거
-- 회사명이 2개인 거래소코드 중복 확인
-- 999999 (inf, -inf) 제거
-- 양극단치 0.5%씩 Trimming(IQR 0.5% 이하, 99.5% 이상 값들 제거)
+- 개봉일 데이터 없는 영화 삭제(4개)
+- 영화명이 중복인 데이터 삭제
+- 무한값(inf, -inf), 결측치 0으로 대체
+- 양극단치 5%씩 Winsorizing
 
 ## 2. Labeling
-- Label1 : 상장폐지(자발적 상장폐지 제외) + 관리종목 지정 기업 t-1기, t-2기
-  * 상장폐지가 4월 전에 이루어진 경우 t-1기 데이터가 없기에 t-2기, t-3기에 1부여
-  * 관리종목의 경우 최초 지정된 년도를 t기로 판단
-- Label0 : 정상기업(1에 해당하지 않는 기업)
+- Label1 : 영화산업지수 12일 수익률 > 코스닥 12일 수익률 영화
+- Label0 : 영화산업지수 12일 수익률 <= 코스닥 12일 수익률 영화
 
 ## 3. Data split & Scaling
-- Train set : 2011 ~ 2017 (7년)
-- Test set : 2018 ~ 2019 (2년)
+- Train set 7: Test set 3 비율 랜덤 분할
+- 영화데이터의 경우 시계열데이터가 아니기 때문에 임의분리, Test set 활용 백테스팅 진행
 - Scaling : Train set, test set 각각 Standard scaling(Data Leakage 방지)
 
 ## 4. Feature Selection
@@ -55,38 +52,45 @@ UBION Project1 / 2023.02.27 ~ 2023.03.26
   - 정규성검정(Shapiro-Wilks, Anderson, Dist plot, qq plot)
   - 독립성검정(Durbin-Watson)
     - 분류 모형에서는 통계검정이 중요하지 않기에 등분산성 검증 따로 진행 X
-- 아래 3개 모델 중 3개 이상 중복 피쳐를 최종 선택
+- 아래 4개 모델 중 3개 이상 중복 피쳐를 최종 선택
   - T-test(통계분석)
   - Lasso(Wrapper Method)
   - Stepwise(Embbeded Method)
+  - SelectKbest(Filter Method)
 
 ## 5. Modeling
 
 [단일분류]
 - Logistic
+- KNN
 - Decision Tree
 - SVM(SVC 활용)
 
 [Ensamble]
 - Random Forest
 - **XGB**
-- Stacking (Logistic + SVC + XGBoost)
-
-[Deep Learning]
-- TabNet
 
 **-> 최종모델 : XGBClassifier**
 
 
 ## 6. Evaluation(Test set)
-- ACC : 0.65
-- Precision : 0.07
-- **Recall : 0.92**
-- F1-score : 0.13
-- AUC : 0.77
+- ACC : 0.64
+- Precision : 0.64
+- Recall : 0.64
+- **F1-score : 0.64**
+- AUC : 0.64
 
-[Recall이 상대적으로 높은 성능을 보이는 모델]
-- 부실기업을 정상기업으로 판단하는 2종 오류 해소
-- 기업 부실을 판단하는 입장에서 위험 최소화
+[F1-score가 상대적으로 높은 성능을 보이는 모델]
+- 수익을 극대화하기 위해서는 수익이 날 때, 손실이 날 때 모두를 분류해야 하기에 정밀도와 재현율의 조화평균으로 선택
 
-[정상기업과 부실기업의 차이 및 거래량 확인]
+[PPT 예시]
+
+![git5](https://user-images.githubusercontent.com/124761683/236629729-243c906a-b132-4cca-aa11-f6464187f632.JPG)
+
+![git6](https://user-images.githubusercontent.com/124761683/236629733-7d128070-b4d8-47dc-a748-30e75dcb1b19.JPG)
+
+![git7](https://user-images.githubusercontent.com/124761683/236629734-7d95c298-3d7c-4bc3-ae78-a323374ca843.JPG)
+
+![git8](https://user-images.githubusercontent.com/124761683/236629741-d884ecf0-2d31-4cc5-9985-14f75ce0d4ab.JPG)
+
+![git9](https://user-images.githubusercontent.com/124761683/236629743-cff92e7c-e418-4194-953a-233a9233d20d.JPG)
